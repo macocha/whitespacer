@@ -424,7 +424,7 @@ export const instructionExecutors =  {
   },
 };
 
-export default class SimpleInterpreter {
+export class SimpleInterpreter {
   constructor(code, input) {
     const {instructions, labels} = parse(code);
     this.instructions = instructions;

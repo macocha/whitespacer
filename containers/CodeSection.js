@@ -8,16 +8,17 @@ const style = {
   display: 'flex',
 };
 
-export default class HeaderBar extends React.Component {
+export default class CodeSection extends React.Component {
   static propTypes = {
     style: React.PropTypes.object,
+    source: React.PropTypes.object,
   }
 
   render() {
     return (
       <div style = {{...this.props.style, ...style}}>
-        <SourceEditor style = {{flex: 0.5}}/>
-        <ParsedEditor style = {{flex: 0.5}}/>
+        <SourceEditor style = {{flex: 0.5}} code = {this.props.source.code} />
+        <ParsedEditor style = {{flex: 0.5}} {...this.props.source.parsed}/>
       </div>
     );
   }

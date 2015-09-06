@@ -1,8 +1,11 @@
 jest.dontMock('../Whitespace.js');
+jest.dontMock('../parse.js');
 jest.dontMock('../constants/Instructions.js');
 
 import * as Instructions from '../constants/Instructions';
 const instructionExecutors = require('../Whitespace').instructionExecutors;
+const SimpleInterpreter = require('../Whitespace').SimpleInterpreter;
+const fs = require.requireActual('fs');
 
 describe('instructionExecutors', () => {
   it('should have handlers for all Stack Manipulation instructions', () => {
@@ -97,190 +100,206 @@ describe('Stack Manipulation', () => {
     expect(() => swp(emptyState, -1)).toThrow();
     expect(() => swp({stack: [1]}, -1)).toThrow();
   });
+});
 
-  describe('Arithmetic', () => {
-    const add = instructionExecutors[Instructions.ADD];
-    const sub = instructionExecutors[Instructions.SUB];
-    const mul = instructionExecutors[Instructions.MUL];
-    const div = instructionExecutors[Instructions.DIV];
-    const mod = instructionExecutors[Instructions.MOD];
+describe('Arithmetic', () => {
+  const add = instructionExecutors[Instructions.ADD];
+  const sub = instructionExecutors[Instructions.SUB];
+  const mul = instructionExecutors[Instructions.MUL];
+  const div = instructionExecutors[Instructions.DIV];
+  const mod = instructionExecutors[Instructions.MOD];
 
-    it('should add top two entries and error when not enough parameters on stack', () => {
-      expect(add({stack: [1, 2, 3, 4, 5]}).stack).toEqual([1, 2, 3, 9]);
-      expect(add({stack: [1, 2, 3, 4, -5]}).stack).toEqual([1, 2, 3, -1]);
+  it('should add top two entries and error when not enough parameters on stack', () => {
+    expect(add({stack: [1, 2, 3, 4, 5]}).stack).toEqual([1, 2, 3, 9]);
+    expect(add({stack: [1, 2, 3, 4, -5]}).stack).toEqual([1, 2, 3, -1]);
 
-      expect(() => add({stack: []})).toThrow();
-      expect(() => add({stack: [1]})).toThrow();
-    });
-
-    it('should subtract top two entries and error when not enough parameters on stack', () => {
-      expect(sub({stack: [1, 2, 3, 4, 5]}).stack).toEqual([1, 2, 3, -1]);
-      expect(sub({stack: [1, 2, 3, 4, -5]}).stack).toEqual([1, 2, 3, 9]);
-
-      expect(() => sub({stack: []})).toThrow();
-      expect(() => sub({stack: [1]})).toThrow();
-    });
-
-    it('should multiply top two entries and error when not enough parameters on stack', () => {
-      expect(mul({stack: [1, 2, 3, 4, 5]}).stack).toEqual([1, 2, 3, 20]);
-      expect(mul({stack: [1, 2, 3, 4, -5]}).stack).toEqual([1, 2, 3, -20]);
-
-      expect(() => mul({stack: []})).toThrow();
-      expect(() => mul({stack: [1]})).toThrow();
-    });
-
-    it('should integer divide top two entries and error when not enough parameters on stack or div by 0', () => {
-      expect(div({stack: [1, 2, 3, 9, 5]}).stack).toEqual([1, 2, 3, 1]);
-      expect(div({stack: [1, 2, 3, 11, 5]}).stack).toEqual([1, 2, 3, 2]);
-      expect(div({stack: [1, 2, 3, -9, 5]}).stack).toEqual([1, 2, 3, -2]);
-      expect(div({stack: [1, 2, 3, -11, 5]}).stack).toEqual([1, 2, 3, -3]);
-      expect(div({stack: [1, 2, 3, 0, -5]}).stack).toEqual([1, 2, 3, 0]);
-
-
-      expect(() => div({stack: []})).toThrow();
-      expect(() => div({stack: [1]})).toThrow();
-      expect(() => div({stack: [1, 2, 3, 4, 0]})).toThrow();
-    });
-
-    it('should modulo top two entries and error when not enough parameters on stack or mod by 0', () => {
-      // It's modulo from integer division and it's sign is equal to sign of divisor
-      expect(mod({stack: [1, 2, 3, 9, 5]}).stack).toEqual([1, 2, 3, 4]);
-      expect(mod({stack: [1, 2, 3, 11, 5]}).stack).toEqual([1, 2, 3, 1]);
-      expect(mod({stack: [1, 2, 3, -9, 5]}).stack).toEqual([1, 2, 3, 1]);
-      expect(mod({stack: [1, 2, 3, -11, 5]}).stack).toEqual([1, 2, 3, 4]);
-      expect(mod({stack: [1, 2, 3, 9, -5]}).stack).toEqual([1, 2, 3, -1]);
-      expect(mod({stack: [1, 2, 3, 11, -5]}).stack).toEqual([1, 2, 3, -4]);
-
-
-      expect(() => mod({stack: []})).toThrow();
-      expect(() => mod({stack: [1]})).toThrow();
-      expect(() => mod({stack: [1, 2, 3, 4, 0]})).toThrow();
-    });
+    expect(() => add({stack: []})).toThrow();
+    expect(() => add({stack: [1]})).toThrow();
   });
 
-  describe('Heap Access', () => {
-    const get = instructionExecutors[Instructions.GET];
-    const store = instructionExecutors[Instructions.STORE];
+  it('should subtract top two entries and error when not enough parameters on stack', () => {
+    expect(sub({stack: [1, 2, 3, 4, 5]}).stack).toEqual([1, 2, 3, -1]);
+    expect(sub({stack: [1, 2, 3, 4, -5]}).stack).toEqual([1, 2, 3, 9]);
 
-    it('should consume addr and value from stack then save it in heap and error when not enough parameters', () => {
-      expect(store({stack: [1, 2, 3, 4, 5], heap: {}}).stack).toEqual([1, 2, 3]);
-      expect(store({stack: [1, 2, 3, 4, 5], heap: {}}).heap).toEqual({4: 5});
-      expect(store({stack: [1, 2, 3, 4, 5], heap: {4: 123}}).heap).toEqual({4: 5});
-
-      expect(() => store({stack: [], heap: {}})).toThrow();
-      expect(() => store({stack: [1], heap: {}})).toThrow();
-    });
-
-    it('should consume addr and push value from heap, error on empty stack and wrong address', () => {
-      expect(get({stack: [1, 2, 3, 4, 5], heap: {5: 6}}).stack).toEqual([1, 2, 3, 4, 6]);
-      expect(get({stack: [1, 2, 3, 4, 5], heap: {3: 2, 5: 6}}).stack).toEqual([1, 2, 3, 4, 6]);
-      expect(get({stack: [1, 2, 3, 4, 5], heap: {4: 123, 5: 7}}).heap).toEqual({4: 123, 5: 7});
-
-      expect(() => get({stack: [], heap: {1: 3}})).toThrow();
-      expect(() => get({stack: [1, 2, 3], heap: {}})).toThrow();
-    });
+    expect(() => sub({stack: []})).toThrow();
+    expect(() => sub({stack: [1]})).toThrow();
   });
 
-  describe('I/O', () => {
-    const outc = instructionExecutors[Instructions.OUTC];
-    const outn = instructionExecutors[Instructions.OUTN];
-//    const inpc = instructionExecutors[Instructions.INPC];
-//    const inpn = instructionExecutors[Instructions.INPN];
-// TODO: Add tests after implementing input functionalities.
+  it('should multiply top two entries and error when not enough parameters on stack', () => {
+    expect(mul({stack: [1, 2, 3, 4, 5]}).stack).toEqual([1, 2, 3, 20]);
+    expect(mul({stack: [1, 2, 3, 4, -5]}).stack).toEqual([1, 2, 3, -20]);
 
-    it('output a character given by the top of stack, error out when stack is empty', () => {
-      expect(outc({stack: [1, 2, 3, 4, 65], output: ''}).stack).toEqual([1, 2, 3, 4]);
-      expect(outc({stack: [1, 2, 3, 4, 10], output: ''}).output).toBe('\n');
-      expect(outc({stack: [1, 2, 3, 4, 71], output: 'G'}).output).toBe('GG');
-
-      expect(() => outc({stack: [], output: ''})).toThrow();
-    });
-
-    it('output a character given by the top of stack, error out when stack is empty', () => {
-      expect(outn({stack: [1, 2, 3, 4, 65], output: ''}).stack).toEqual([1, 2, 3, 4]);
-      expect(outn({stack: [1, 2, 3, 4, 10], output: ''}).output).toBe('10');
-      expect(outn({stack: [1, 2, 3, 4, 37], output: '13'}).output).toBe('1337');
-
-      expect(() => outn({stack: [], output: ''})).toThrow();
-    });
+    expect(() => mul({stack: []})).toThrow();
+    expect(() => mul({stack: [1]})).toThrow();
   });
 
-  describe('Flow Control', () => {
-    const label = instructionExecutors[Instructions.LABEL];
-    const call = instructionExecutors[Instructions.CALL];
-    const jmp = instructionExecutors[Instructions.JMP];
-    const jez = instructionExecutors[Instructions.JEZ];
-    const jlz = instructionExecutors[Instructions.JLZ];
-    const ret = instructionExecutors[Instructions.RET];
-    const exit = instructionExecutors[Instructions.EXIT];
+  it('should integer divide top two entries and error when not enough parameters on stack or div by 0', () => {
+    expect(div({stack: [1, 2, 3, 9, 5]}).stack).toEqual([1, 2, 3, 1]);
+    expect(div({stack: [1, 2, 3, 11, 5]}).stack).toEqual([1, 2, 3, 2]);
+    expect(div({stack: [1, 2, 3, -9, 5]}).stack).toEqual([1, 2, 3, -2]);
+    expect(div({stack: [1, 2, 3, -11, 5]}).stack).toEqual([1, 2, 3, -3]);
+    expect(div({stack: [1, 2, 3, 0, -5]}).stack).toEqual([1, 2, 3, 0]);
 
-    it('should essentially no-op on label', () => {
-      expect(label({stack: [1, 2, 3, 4, 5], programCounter: 5}).stack).toEqual([1, 2, 3, 4, 5]);
-      expect(label({stack: [1, 2, 3, 4, 5], programCounter: 5}).programCounter).toBe(6);
-    });
 
-    it('it should call function at label and store address at callstack also throw errors on invalid label', () => {
-      expect(call({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4, 5]);
-      expect(call({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(13);
-      expect(call({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2, 6]);
+    expect(() => div({stack: []})).toThrow();
+    expect(() => div({stack: [1]})).toThrow();
+    expect(() => div({stack: [1, 2, 3, 4, 0]})).toThrow();
+  });
 
-      expect(() => call({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {' \t  ': 13})).toThrow();
-    });
+  it('should modulo top two entries and error when not enough parameters on stack or mod by 0', () => {
+    // It's modulo from integer division and it's sign is equal to sign of divisor
+    expect(mod({stack: [1, 2, 3, 9, 5]}).stack).toEqual([1, 2, 3, 4]);
+    expect(mod({stack: [1, 2, 3, 11, 5]}).stack).toEqual([1, 2, 3, 1]);
+    expect(mod({stack: [1, 2, 3, -9, 5]}).stack).toEqual([1, 2, 3, 1]);
+    expect(mod({stack: [1, 2, 3, -11, 5]}).stack).toEqual([1, 2, 3, 4]);
+    expect(mod({stack: [1, 2, 3, 9, -5]}).stack).toEqual([1, 2, 3, -1]);
+    expect(mod({stack: [1, 2, 3, 11, -5]}).stack).toEqual([1, 2, 3, -4]);
 
-    it('it should jump to label also throw errors on invalid label', () => {
-      expect(jmp({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4, 5]);
-      expect(jmp({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(13);
-      expect(jmp({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
 
-      expect(() => jmp({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {' \t  ': 13})).toThrow();
-    });
+    expect(() => mod({stack: []})).toThrow();
+    expect(() => mod({stack: [1]})).toThrow();
+    expect(() => mod({stack: [1, 2, 3, 4, 0]})).toThrow();
+  });
+});
 
-    it('it should jump to label if top of stack is zero also throw errors on invalid label and empty stack', () => {
-      expect(jez({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
-      expect(jez({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(6);
-      expect(jez({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+describe('Heap Access', () => {
+  const get = instructionExecutors[Instructions.GET];
+  const store = instructionExecutors[Instructions.STORE];
 
-      expect(jez({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
-      expect(jez({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(13);
-      expect(jez({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+  it('should consume addr and value from stack then save it in heap and error when not enough parameters', () => {
+    expect(store({stack: [1, 2, 3, 4, 5], heap: {}}).stack).toEqual([1, 2, 3]);
+    expect(store({stack: [1, 2, 3, 4, 5], heap: {}}).heap).toEqual({4: 5});
+    expect(store({stack: [1, 2, 3, 4, 5], heap: {4: 123}}).heap).toEqual({4: 5});
 
-      expect(jez({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
-      expect(jez({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(6);
-      expect(jez({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+    expect(() => store({stack: [], heap: {}})).toThrow();
+    expect(() => store({stack: [1], heap: {}})).toThrow();
+  });
 
-      expect(() => jez({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {' \t  ': 13})).toThrow();
-      expect(() => jez({stack: [], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13})).toThrow();
-    });
+  it('should consume addr and push value from heap, error on empty stack and wrong address', () => {
+    expect(get({stack: [1, 2, 3, 4, 5], heap: {5: 6}}).stack).toEqual([1, 2, 3, 4, 6]);
+    expect(get({stack: [1, 2, 3, 4, 5], heap: {3: 2, 5: 6}}).stack).toEqual([1, 2, 3, 4, 6]);
+    expect(get({stack: [1, 2, 3, 4, 5], heap: {4: 123, 5: 7}}).heap).toEqual({4: 123, 5: 7});
 
-    it('it should jump to label if top of stack is less than zero also throw errors on invalid label and empty stack', () => {
-      expect(jlz({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
-      expect(jlz({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(6);
-      expect(jlz({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+    expect(() => get({stack: [], heap: {1: 3}})).toThrow();
+    expect(() => get({stack: [1, 2, 3], heap: {}})).toThrow();
+  });
+});
 
-      expect(jlz({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
-      expect(jlz({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(6);
-      expect(jlz({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+describe('I/O', () => {
+  const outc = instructionExecutors[Instructions.OUTC];
+  const outn = instructionExecutors[Instructions.OUTN];
+  //    const inpc = instructionExecutors[Instructions.INPC];
+  //    const inpn = instructionExecutors[Instructions.INPN];
+  // TODO: Add tests after implementing input functionalities.
 
-      expect(jlz({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
-      expect(jlz({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(13);
-      expect(jlz({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+  it('output a character given by the top of stack, error out when stack is empty', () => {
+    expect(outc({stack: [1, 2, 3, 4, 65], output: ''}).stack).toEqual([1, 2, 3, 4]);
+    expect(outc({stack: [1, 2, 3, 4, 10], output: ''}).output).toBe('\n');
+    expect(outc({stack: [1, 2, 3, 4, 71], output: 'G'}).output).toBe('GG');
 
-      expect(() => jlz({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {' \t  ': 13})).toThrow();
-      expect(() => jlz({stack: [], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13})).toThrow();
-    });
+    expect(() => outc({stack: [], output: ''})).toThrow();
+  });
 
-    it('it should exit function and return to the top of callstack', () => {
-      expect(ret({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4, 5]);
-      expect(ret({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(2);
-      expect(ret({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([]);
+  it('output a character given by the top of stack, error out when stack is empty', () => {
+    expect(outn({stack: [1, 2, 3, 4, 65], output: ''}).stack).toEqual([1, 2, 3, 4]);
+    expect(outn({stack: [1, 2, 3, 4, 10], output: ''}).output).toBe('10');
+    expect(outn({stack: [1, 2, 3, 4, 37], output: '13'}).output).toBe('1337');
 
-      expect(() => ret({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: []}, '  \t  ', {' \t  ': 13})).toThrow();
-    });
+    expect(() => outn({stack: [], output: ''})).toThrow();
+  });
+});
 
-    it('it should exit the program', () => {
-      expect(exit({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4, 5]);
-      expect(exit({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(Instructions.EXIT);
-      expect(exit({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
-    });
+describe('Flow Control', () => {
+  const label = instructionExecutors[Instructions.LABEL];
+  const call = instructionExecutors[Instructions.CALL];
+  const jmp = instructionExecutors[Instructions.JMP];
+  const jez = instructionExecutors[Instructions.JEZ];
+  const jlz = instructionExecutors[Instructions.JLZ];
+  const ret = instructionExecutors[Instructions.RET];
+  const exit = instructionExecutors[Instructions.EXIT];
+
+  it('should essentially no-op on label', () => {
+    expect(label({stack: [1, 2, 3, 4, 5], programCounter: 5}).stack).toEqual([1, 2, 3, 4, 5]);
+    expect(label({stack: [1, 2, 3, 4, 5], programCounter: 5}).programCounter).toBe(6);
+  });
+
+  it('should call function at label and store address at callstack also throw errors on invalid label', () => {
+    expect(call({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4, 5]);
+    expect(call({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(13);
+    expect(call({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2, 6]);
+
+    expect(() => call({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {' \t  ': 13})).toThrow();
+  });
+
+  it('should jump to label also throw errors on invalid label', () => {
+    expect(jmp({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4, 5]);
+    expect(jmp({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(13);
+    expect(jmp({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+
+    expect(() => jmp({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {' \t  ': 13})).toThrow();
+  });
+
+  it('should jump to label if top of stack is zero also throw errors on invalid label and empty stack', () => {
+    expect(jez({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
+    expect(jez({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(6);
+    expect(jez({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+
+    expect(jez({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
+    expect(jez({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(13);
+    expect(jez({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+
+    expect(jez({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
+    expect(jez({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(6);
+    expect(jez({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+
+    expect(() => jez({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {' \t  ': 13})).toThrow();
+    expect(() => jez({stack: [], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13})).toThrow();
+  });
+
+  it('should jump to label if top of stack is less than zero also throw errors on invalid label and empty stack', () => {
+    expect(jlz({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
+    expect(jlz({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(6);
+    expect(jlz({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+
+    expect(jlz({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
+    expect(jlz({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(6);
+    expect(jlz({stack: [1, 2, 3, 4, 0], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+
+    expect(jlz({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4]);
+    expect(jlz({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(13);
+    expect(jlz({stack: [1, 2, 3, 4, -5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+
+    expect(() => jlz({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {' \t  ': 13})).toThrow();
+    expect(() => jlz({stack: [], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13})).toThrow();
+  });
+
+  it('should exit function and return to the top of callstack', () => {
+    expect(ret({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4, 5]);
+    expect(ret({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(2);
+    expect(ret({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([]);
+
+    expect(() => ret({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: []}, '  \t  ', {' \t  ': 13})).toThrow();
+  });
+
+  it('should exit the program', () => {
+    expect(exit({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 5}).stack).toEqual([1, 2, 3, 4, 5]);
+    expect(exit({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).programCounter).toBe(Instructions.EXIT);
+    expect(exit({stack: [1, 2, 3, 4, 5], programCounter: 5, callStack: [2]}, '  \t  ', {'  \t  ': 13}).callStack).toEqual([2]);
+  });
+});
+
+describe('Simple Interpreter', () => {
+  it('should run the hello world example', () => {
+    const example = fs.readFileSync('./whitespace/examples/hworld.ws', 'utf-8');
+    const interpreter = new SimpleInterpreter(example);
+
+    expect(interpreter.run()).toBe('Hello, world of spaces!\r\n' );
+  });
+
+  it('should run counting example', () => {
+    const example = fs.readFileSync('./whitespace/examples/count.ws', 'utf-8');
+    const interpreter = new SimpleInterpreter(example);
+
+    expect(interpreter.run()).toBe('1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n');
   });
 });
