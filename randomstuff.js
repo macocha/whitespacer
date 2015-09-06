@@ -1,12 +1,14 @@
+/* eslint-disable */
+
 var fs = require('fs');
 require("babel/register");
-var parse = require('./parse');
-var Whitespace = require('./Whitespace').default;
-var IE = require('./Whitespace').instructionExecutors;
+var parse = require('./whitespace/parse');
+// var Whitespace = require('./Whitespace').default;
+// var IE = require('./Whitespace').instructionExecutors;
 
 
 var test1 = '   \t\t\n\t\n \t\n\n\n';
-
+console.log(parse(test1));
 var x = fs.readFileSync('./examples/count.ws', 'utf-8');
 var y = fs.readFileSync('./examples/hworld.ws', 'utf-8');
 

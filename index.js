@@ -1,9 +1,7 @@
 import React from 'react';
-// import App from './containers/App';
+import App from './containers/App';
 
 React.render(
-  <div>
-    Test.
-  </div>,
+  <App />,
   document.getElementById('root')
 );

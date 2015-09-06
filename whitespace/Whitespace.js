@@ -424,7 +424,7 @@ export const instructionExecutors =  {
   },
 };
 
-export default class Whitespace {
+export default class SimpleInterpreter {
   constructor(code, input) {
     const {instructions, labels} = parse(code);
     this.instructions = instructions;
@@ -446,14 +446,14 @@ export default class Whitespace {
       this.state,
       instructions[pc].argument,
       instructions[pc].imp === Instructions.IMP_FLOW ? this.labels : undefined);
-    console.log(instructions[pc].instruction);
-    console.log(this.state);
+    // console.log(instructions[pc].instruction + ':');
+    // console.log(this.state);
   }
 
   run() {
-    console.log(this.instructions);
     while (this.state.programCounter !== Instructions.EXIT) {
       this.step();
     }
+    return this.state.output;
   }
 }
