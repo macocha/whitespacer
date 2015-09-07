@@ -11,14 +11,18 @@ const style = {
 export default class CodeSection extends React.Component {
   static propTypes = {
     style: React.PropTypes.object,
-    source: React.PropTypes.object,
+    code: React.PropTypes.string.isRequired,
+    parsedInstructions: React.PropTypes.array.isRequired,
+    parseError: React.PropTypes.string,
+    save: React.PropTypes.func.isRequired,
+    parse: React.PropTypes.func.isRequired,
   }
 
   render() {
     return (
       <div style = {{...this.props.style, ...style}}>
-        <SourceEditor style = {{flex: 0.5}} code = {this.props.source.code} />
-        <ParsedEditor style = {{flex: 0.5}} {...this.props.source.parsed}/>
+        <SourceEditor style = {{flex: 0.5}} code = {this.props.code} save = {this.props.save} parse = {this.props.parse}/>
+        <ParsedEditor style = {{flex: 0.5}} parsedInstructions = {this.props.parsedInstructions} parseError = {this.props.parseError}/>
       </div>
     );
   }

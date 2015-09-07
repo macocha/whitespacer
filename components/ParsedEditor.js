@@ -15,19 +15,21 @@ const instructionlistStyle = {
 export default class ParsedEditor extends React.Component {
   static propTypes = {
     style: React.PropTypes.object,
-    instructions: React.PropTypes.array.isRequired,
+    parsedInstructions: React.PropTypes.array.isRequired,
+    parseError: React.PropTypes.string,
   }
 
   render() {
     return (
       <div style = {{...this.props.style, ...style}}>
         <div style = {{flex: '0 0 40px'}}>Parsed Code</div>
-        <div style={instructionlistStyle}>
-          {this.props.instructions.map((instruction, index) => {
-            return <ParsedLine key={index} {...instruction} instructionNum = {index} />;
-          })
-          }
-        </div>
+        {!this.props.parseError ?
+          <div style={instructionlistStyle}>
+            {this.props.parsedInstructions.map((instruction, index) => {
+              return <ParsedLine key={index} {...instruction} instructionNum = {index} />;
+            })}
+          </div> :
+          <div style={{color: 'red'}}>{this.props.parseError}</div>}
       </div>
     );
   }

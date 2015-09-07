@@ -7,14 +7,14 @@ var Whitespace = require('./whitespace/Whitespace').SimpleInterpreter;
 // var IE = require('./Whitespace').instructionExecutors;
 
 
-var test1 = '   \t\t\n\t\n \t\n\n\n';
+var test1 = '    \t     \t\t\n\t\n \t\n\n\n';
 console.log(parse(test1));
 var x = fs.readFileSync('./whitespace/examples/count.ws', 'utf-8');
 var y = fs.readFileSync('./whitespace/examples/hworld.ws', 'utf-8');
 
 // console.log(parse(x));
 t1 = new Whitespace(x);
-console.log([t1.run()]);
+console.log([x]);
 
 // t2 = new Whitespace(y);
 // t2.run();
