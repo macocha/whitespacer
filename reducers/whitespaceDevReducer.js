@@ -7,12 +7,12 @@ const initialState = {
   parsedLabels: {},
   parseError: '',
   VMState: {
-    stack: [],
-    heap: {},
+    stack: [1,2,3,4,5,6],
+    heap: {'1': 3, '3': 6},
     callStack: [],
     programCounter: 0,
-    input: '',
-    output: '',
+    input: 'xx',
+    output: 'xxxx',
   },
 };
 

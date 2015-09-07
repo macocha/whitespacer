@@ -19,6 +19,7 @@ class App extends React.Component {
     dispatch: React.PropTypes.func.isRequired,
     code: React.PropTypes.string.isRequired,
     parsedInstructions: React.PropTypes.array.isRequired,
+    VMState: React.PropTypes.object.isRequired,
     parseError: React.PropTypes.string,
   }
 
@@ -33,7 +34,7 @@ class App extends React.Component {
           save = {(c) => this.props.dispatch(codeSave(c))}
           parse = {() => this.props.dispatch(codeParse())}
         />
-        <ExecutionSection style = {{flex: '.5'}}/>
+      <ExecutionSection style = {{flex: '.5'}} {...this.props.VMState}/>
       </div>
     );
   }
