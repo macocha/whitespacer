@@ -25,14 +25,34 @@ export function executeStep() {
   };
 }
 
-export function executeRun() {
-  return {
-    type: types.EXECUTE_RUN,
-  };
-}
-
 export function executeReset() {
   return {
     type: types.EXECUTE_RESET,
+  };
+}
+
+export function executeStop() {
+  return (dispatch, getState) => {
+    const { runInterval } = getState();
+    if (runInterval !== null) {
+      clearInterval(runInterval);
+      dispatch({type: types.EXECUTE_STOP});
+    }
+  };
+}
+
+export function executeRun() {
+  return (dispatch, getState) => {
+    const state = getState();
+    if (state.runInterval === null) {
+      const runInterval = setInterval(() => {
+        dispatch(executeStep());
+        const { VMState: { programCounter } }  = getState();
+        if (!Number.isInteger(programCounter)) {
+          dispatch(executeStop());
+        }
+      }, 500);
+      dispatch({type: types.EXECUTE_RUN, intervalId: runInterval});
+    }
   };
 }

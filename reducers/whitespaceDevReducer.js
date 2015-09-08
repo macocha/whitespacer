@@ -17,6 +17,7 @@ const initialState = {
   parsedLabels: {},
   parseError: '',
   runtimeError: '',
+  runInterval: null,
   VMState: { ...emptyVMState,
     stack: [1, 2, 3, 4, 5, 6],
     heap: {'1': 3, '3': 6},
@@ -26,6 +27,7 @@ const initialState = {
 export default function whitespaceDevStudio(state = initialState, action) {
   console.log('got', action);
   switch (action.type) {
+
   case types.CODE_SAVE:
     return {
       ...state,
@@ -73,12 +75,24 @@ export default function whitespaceDevStudio(state = initialState, action) {
       } catch (e) {
         return {
           ...state,
+          VMState: {...state.VMState, programCounter: 'ERR'},
           runtimeError: e.message,
         };
       }
     }
     return state;
 
+  case types.EXECUTE_RUN:
+    return {
+      ...state,
+      runInterval: action.intervalId,
+    };
+
+  case types.EXECUTE_STOP:
+    return {
+      ...state,
+      runInterval: null,
+    };
 
   default:
     return state;

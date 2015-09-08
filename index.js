@@ -1,11 +1,16 @@
 import React from 'react';
 import App from './containers/App';
 
-import { createStore } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
+import thunkMiddleware from 'redux-thunk';
 import { Provider } from 'react-redux';
 import whitespaceDevStudio from './reducers/whitespaceDevReducer';
 
-const store = createStore(whitespaceDevStudio);
+const createStoreWithMiddleware = applyMiddleware(
+  thunkMiddleware,
+)(createStore);
+
+const store = createStoreWithMiddleware(whitespaceDevStudio);
 
 React.render(
   <Provider store={store}>

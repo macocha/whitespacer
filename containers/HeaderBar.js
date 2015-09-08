@@ -11,7 +11,9 @@ export default class HeaderBar extends React.Component {
     style: React.PropTypes.object,
     step: React.PropTypes.func.isRequired,
     run: React.PropTypes.func.isRequired,
+    stop: React.PropTypes.func.isRequired,
     reset: React.PropTypes.func.isRequired,
+    isRunning: React.PropTypes.bool,
   }
 
   render() {
@@ -20,7 +22,7 @@ export default class HeaderBar extends React.Component {
         <div style={{'flex': '1'}}>whitespace devstudio</div>
         <div style={{'flex': '1'}}>
           <button onClick = {this.props.step}>Step</button>
-          <button onClick = {this.props.run}>Run</button>
+          {!this.props.isRunning ? <button onClick = {this.props.run}>Run</button> : <button onClick = {this.props.stop}>Stop</button> }
           <button onClick = {this.props.reset}>Reset VM</button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { codeParse, codeSave, executeStep, executeRun, executeReset } from '../actions/WhitespaceDevActions';
+import { codeParse, codeSave, executeStep, executeRun, executeStop, executeReset } from '../actions/WhitespaceDevActions';
 
 import HeaderBar from './HeaderBar';
 import CodeSection from './CodeSection';
@@ -22,6 +22,7 @@ class App extends React.Component {
     VMState: React.PropTypes.object.isRequired,
     parseError: React.PropTypes.string,
     runtimeError: React.PropTypes.string,
+    isRunning: React.PropTypes.bool,
   }
 
   render() {
@@ -30,7 +31,9 @@ class App extends React.Component {
         <HeaderBar style = {{flex: '0 0 40px'}}
           step = {() => this.props.dispatch(executeStep())}
           run = {() => this.props.dispatch(executeRun())}
+          stop = {() => this.props.dispatch(executeStop())}
           reset = {() => this.props.dispatch(executeReset())}
+          isRunning = {this.props.isRunning}
           />
         <CodeSection style = {{flex: '.5'}}
           code = {this.props.code}
@@ -48,4 +51,4 @@ class App extends React.Component {
   }
 }
 
-export default connect((s) => s)(App);
+export default connect((s) => {return {...s, isRunning: s.runInterval !== null}; })(App);
