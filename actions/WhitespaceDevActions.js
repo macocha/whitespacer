@@ -13,6 +13,12 @@ export function codeSave(code) {
   };
 }
 
+export function codeLoad() {
+  return {
+    type: types.LOAD_CODE,
+  };
+}
+
 export function executeStep() {
   return {
     type: types.EXECUTE_STEP,
@@ -25,8 +31,8 @@ export function executeRun() {
   };
 }
 
-export function loadCode() {
+export function executeReset() {
   return {
-    type: types.LOAD_CODE,
+    type: types.EXECUTE_RESET,
   };
 }

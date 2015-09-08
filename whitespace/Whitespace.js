@@ -1,5 +1,6 @@
 import parse from './parse';
 import * as Instructions from './constants/Instructions';
+export { Instructions };
 
 export const instructionExecutors =  {
   // IMP: Stack Manipulation

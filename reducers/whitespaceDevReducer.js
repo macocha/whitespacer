@@ -1,18 +1,25 @@
 import * as types from '../constants/ActionTypes';
 import parse from '../whitespace/parse';
+import { Instructions, instructionExecutors } from '../whitespace/Whitespace';
+
+const emptyVMState = {
+  stack: [],
+  heap: {},
+  callStack: [],
+  programCounter: 0,
+  input: '',
+  output: '',
+};
 
 const initialState = {
   code: '   \t\n\n   \t    \t\t\n \n \t\n \t   \t \t \n\t\n     \t\n\t    \n    \t \t\t\n\t  \t\n\t  \t   \t \t\n\n \n \t    \t\t\n\n   \t   \t \t\n \n\n\n\n\n\n',
   parsedInstructions: [],
   parsedLabels: {},
   parseError: '',
-  VMState: {
-    stack: [1,2,3,4,5,6],
+  runtimeError: '',
+  VMState: { ...emptyVMState,
+    stack: [1, 2, 3, 4, 5, 6],
     heap: {'1': 3, '3': 6},
-    callStack: [],
-    programCounter: 0,
-    input: 'xx',
-    output: 'xxxx',
   },
 };
 
@@ -42,6 +49,36 @@ export default function whitespaceDevStudio(state = initialState, action) {
         parseError: e.message,
       };
     }
+
+  case types.EXECUTE_RESET:
+    return {
+      ...state,
+      VMState: { ...emptyVMState },
+    };
+
+  case types.EXECUTE_STEP:
+    const pc = state.VMState.programCounter;
+    const instructions = state.parsedInstructions;
+    if (Number.isInteger(pc)) {
+      try {
+        const newVMState = instructionExecutors[instructions[pc].instruction](
+          state.VMState,
+          instructions[pc].argument,
+          instructions[pc].imp === Instructions.IMP_FLOW ? state.parsedLabels : undefined);
+
+        return {
+          ...state,
+          VMState: newVMState,
+        };
+      } catch (e) {
+        return {
+          ...state,
+          runtimeError: e.message,
+        };
+      }
+    }
+    return state;
+
 
   default:
     return state;

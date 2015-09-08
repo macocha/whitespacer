@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { codeParse, codeSave } from '../actions/WhitespaceDevActions';
+import { codeParse, codeSave, executeStep, executeRun, executeReset } from '../actions/WhitespaceDevActions';
 
 import HeaderBar from './HeaderBar';
 import CodeSection from './CodeSection';
@@ -21,12 +21,17 @@ class App extends React.Component {
     parsedInstructions: React.PropTypes.array.isRequired,
     VMState: React.PropTypes.object.isRequired,
     parseError: React.PropTypes.string,
+    runtimeError: React.PropTypes.string,
   }
 
   render() {
     return (
       <div style={style}>
-        <HeaderBar style = {{flex: '0 0 40px'}}/>
+        <HeaderBar style = {{flex: '0 0 40px'}}
+          step = {() => this.props.dispatch(executeStep())}
+          run = {() => this.props.dispatch(executeRun())}
+          reset = {() => this.props.dispatch(executeReset())}
+          />
         <CodeSection style = {{flex: '.5'}}
           code = {this.props.code}
           parsedInstructions = {this.props.parsedInstructions}
@@ -34,7 +39,10 @@ class App extends React.Component {
           save = {(c) => this.props.dispatch(codeSave(c))}
           parse = {() => this.props.dispatch(codeParse())}
         />
-      <ExecutionSection style = {{flex: '.5'}} {...this.props.VMState}/>
+        <ExecutionSection style = {{flex: '.5'}}
+          {...this.props.VMState}
+          runtimeError = {this.props.runtimeError}
+        />
       </div>
     );
   }

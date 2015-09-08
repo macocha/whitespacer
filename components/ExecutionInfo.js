@@ -9,7 +9,7 @@ const style = {
 export default class IOView extends React.Component {
   static propTypes = {
     style: React.PropTypes.object,
-    programCounter: React.PropTypes.number.isRequired,
+    programCounter: React.PropTypes.oneOfType([React.PropTypes.number, React.PropTypes.string]),
   }
 
   render() {
