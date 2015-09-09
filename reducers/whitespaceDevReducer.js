@@ -19,8 +19,6 @@ const initialState = {
   runtimeError: '',
   runInterval: null,
   VMState: { ...emptyVMState,
-    stack: [1, 2, 3, 4, 5, 6],
-    heap: {'1': 3, '3': 6},
   },
 };
 

@@ -41,6 +41,7 @@ class App extends React.Component {
           parseError = {this.props.parseError}
           save = {(c) => this.props.dispatch(codeSave(c))}
           parse = {() => this.props.dispatch(codeParse())}
+          programCounter =  {this.props.VMState.programCounter}
         />
         <ExecutionSection style = {{flex: '.5'}}
           {...this.props.VMState}

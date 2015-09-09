@@ -16,13 +16,22 @@ export default class CodeSection extends React.Component {
     parseError: React.PropTypes.string,
     save: React.PropTypes.func.isRequired,
     parse: React.PropTypes.func.isRequired,
+    programCounter: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.number]).isRequired,
   }
 
   render() {
     return (
       <div style = {{...this.props.style, ...style}}>
-        <SourceEditor style = {{flex: 0.5}} code = {this.props.code} save = {this.props.save} parse = {this.props.parse}/>
-        <ParsedEditor style = {{flex: 0.5}} parsedInstructions = {this.props.parsedInstructions} parseError = {this.props.parseError}/>
+        <SourceEditor style = {{flex: 0.5}}
+          code = {this.props.code}
+          save = {this.props.save}
+          parse = {this.props.parse}
+        />
+        <ParsedEditor style = {{flex: 0.5}}
+          parsedInstructions = {this.props.parsedInstructions}
+          parseError = {this.props.parseError}
+          programCounter = {this.props.programCounter}
+        />
       </div>
     );
   }

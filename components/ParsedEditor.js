@@ -17,6 +17,7 @@ export default class ParsedEditor extends React.Component {
     style: React.PropTypes.object,
     parsedInstructions: React.PropTypes.array.isRequired,
     parseError: React.PropTypes.string,
+    programCounter: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.number]).isRequired,
   }
 
   render() {
@@ -26,7 +27,11 @@ export default class ParsedEditor extends React.Component {
         {!this.props.parseError ?
           <div style={instructionlistStyle}>
             {this.props.parsedInstructions.map((instruction, index) => {
-              return <ParsedLine key={index} {...instruction} instructionNum = {index} />;
+              return (<ParsedLine
+                        key={index}
+                        {...instruction}
+                        instructionNum = {index}
+                        higlight = {index === this.props.programCounter ?  'springgreen' : null}/>);
             })}
           </div> :
           <div style={{color: 'red'}}>{this.props.parseError}</div>}
