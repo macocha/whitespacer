@@ -19,6 +19,10 @@ export default class CodeSection extends React.Component {
     programCounter: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.number]).isRequired,
   }
 
+  componentDidMount() {
+    this.props.parse();
+  }
+
   render() {
     return (
       <div style = {{...this.props.style, ...style}}>
